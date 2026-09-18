@@ -1,15 +1,3 @@
-"""
-verify.py
-
-Differential test. Throws a large number of random and deliberately awkward
-inputs at both oracle.quote() and my_quote.quote() and reports any input
-where the two disagree.
-
-    python verify.py
-
-A clean run means my reconstruction is behaviourally identical to the oracle
-across the documented input ranges.
-"""
 import random
 
 from oracle import quote as oracle_quote, queries_used, reset_counter
@@ -32,7 +20,6 @@ def main():
     failures = []
     checks = 0
 
-    # 1. random inputs across the documented ranges 
     random.seed(20240517)
     for _ in range(30000):
         w = round(random.uniform(0.1, 100.0), random.choice([1, 2, 3]))
@@ -44,8 +31,6 @@ def main():
                 failures)
         checks += 1
 
-    # 2. every half-kilo boundary, nudged either side
-    # This is where a rounding mistake would show up.
     for k in range(1, 201):
         for eps in (-1e-9, -1e-6, 0.0, 1e-9, 1e-6):
             w = k * 0.5 + eps
@@ -56,7 +41,6 @@ def main():
                     compare(w, d, c, False, "", failures)
                     checks += 1
 
-    # ---- 3. a fine walk across the 800.00 discount line -------------------
     d = 311.0
     while d <= 313.0:
         compare(0.5, round(d, 5), "standard", False, "", failures)
@@ -64,7 +48,6 @@ def main():
         checks += 2
         d += 0.001
 
-    # 4. named corner cases
     corners = [
         (0.1, 1.0, "standard", False, ""),            # cheapest order possible
         (0.1, 1.0, "standard", False, "WELCOME10"),   # goes negative

@@ -1,15 +1,3 @@
-"""
-probes.py
-
-The experiments I ran against oracle.quote() to work out its pricing rules.
-
-Each block below is one question I wanted answered, the probes I used to
-answer it, and the output that convinced me. Run it with:
-
-    python probes.py
-
-It only calls quote(). It never touches the encoded blob inside oracle.py.
-"""
 import math
 
 from oracle import quote, queries_used, reset_counter
@@ -22,14 +10,12 @@ def rule(title):
     print("=" * 72)
 
 
-# 1. First contact. Just get a number out and check the module works.
 rule("1. Baseline")
 
 print("quote(2.0, 100.0, 'standard') =", quote(2.0, 100.0, "standard"))
 print("Starting point. Now I change one input at a time and watch the delta.")
 
 
-# 2. Weight. Hold distance and category fixed, walk the weight up.
 rule("2. Weight, coarse sweep (distance fixed at 100 km, standard)")
 
 prev = None
@@ -43,7 +29,6 @@ print("\n  Looks linear at 40.00 per kg. But 0.1 kg and 0.5 kg cost the same,")
 print("  which a straight per-kg rate would not do. Worth a closer look.")
 
 
-# 3. Weight, fine sweep. This is where the staircase showed up.
 rule("3. Weight, fine sweep in 0.1 kg steps")
 
 prev = None
@@ -60,7 +45,6 @@ print("  So weight is billed in whole 0.5 kg blocks, rounded UP:")
 print("      chargeable_weight = ceil(weight / 0.5) * 0.5")
 
 
-# 4. Distance.
 rule("4. Distance (weight fixed at 1.0 kg, standard)")
 
 prev = None
@@ -74,7 +58,6 @@ print("\n  Straight line, 2.50 per km, and it reacts to a single extra km.")
 print("  No block rounding on distance, unlike weight.")
 
 
-# 5. Is there a fixed booking fee on top?
 rule("5. Solving for a base fee")
 
 p = quote(0.5, 1.0, "standard")
@@ -85,7 +68,6 @@ print("\n  They match, so there is no flat booking fee. Base is zero.")
 print("      subtotal = 40.00 * chargeable_weight + 2.50 * distance_km")
 
 
-# 6. The anomaly. Somewhere past 13 kg the line bends.
 rule("6. Something breaks the linear model around 14 kg")
 
 prev = None
@@ -103,7 +85,6 @@ print("  810.00 * 0.9 = 729.00, which is exactly what came back.")
 print("  Hypothesis: the discount triggers on the PRICE, not on the weight.")
 
 
-# 7. Test that hypothesis by crossing the same line with distance instead.
 rule("7. Same discount reached through distance (weight fixed at 0.5 kg)")
 
 
@@ -123,7 +104,6 @@ print("  Note 312 km gives a subtotal of exactly 800.00 and is NOT discounted,")
 print("  so the test is strictly greater than 800, not >=.")
 
 
-# 8. Categories.
 rule("8. Categories, tested at two very different price levels")
 
 cats = ["standard", "electronics", "fragile", "books", "clothing", "food"]
@@ -141,7 +121,6 @@ print("  electronics keeps the same RATIO (1.3) at both price levels -> multipli
 print("  fragile keeps the same DIFFERENCE (150.00) at both levels -> flat surcharge.")
 
 
-# 9. Express. This one was a dead end, and that is the finding.
 rule("9. Express flag")
 
 deltas = set()
@@ -160,7 +139,6 @@ print(f"  set of every price difference observed: {deltas}")
 print("\n  Express never changes the price. The parameter is accepted and ignored.")
 
 
-# 10. Coupon.
 rule("10. Coupon WELCOME10")
 
 for (w, d) in [(1.0, 10.0), (2.0, 100.0), (1.0, 264.0)]:
@@ -183,7 +161,6 @@ print("    quote(0.1, 1.0, 'standard', coupon='WELCOME10') =",
       quote(0.1, 1.0, "standard", coupon="WELCOME10"))
 
 
-# 11. Order of operations. Three things can move the price, so sequence matters.
 rule("11. Order of operations")
 
 print("  (a) Does the discount see the category adjustment?")
@@ -208,7 +185,6 @@ print("      The answer was 710.00, so the coupon is applied LAST.")
 print("\n  Final order:  weight + distance  ->  category  ->  volume discount  ->  coupon")
 
 
-# 12. Worked examples against the reconstruction.
 rule("12. Spot check against my_quote.py")
 
 try:
